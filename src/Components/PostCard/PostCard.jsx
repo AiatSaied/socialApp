@@ -31,6 +31,7 @@ export default function PostCard({ posts }) {
     mutationFn: likePost,
     onSuccess: () => {
       query.invalidateQueries({ queryKey: ["getPosts"] });
+
       query.invalidateQueries({ queryKey: ["userPosts"] });
       toast.success("Liked");
     },
