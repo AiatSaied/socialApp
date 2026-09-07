@@ -27,7 +27,7 @@ export function UserDataProvider(props) {
     select: (res) => res?.data?.data.user,
   });
 
-  console.log(data);
+  // console.log(data);
 
   return (
     <UserData.Provider value={{ Token, setToken, data }}>

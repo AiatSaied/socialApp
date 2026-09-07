@@ -1,12 +1,18 @@
-import React from "react";
+import React, { useContext } from "react";
 import SingleComment from "../SingleComment/SingleComment";
 import { Link } from "react-router-dom";
 import CreateComment from "../CreateComment/CreateComment";
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import DropDown from "../DropDown/DropDown";
+import { UserData } from "../Context/UserData";
 
 export default function PostCard({ posts }) {
+  let { data: userData } = useContext(UserData);
+
+  // console.log(userData);
+
   // console.log(posts); // {body, createdAt, image, likesCount , topComment, user.name, user.photo, id , user}
   let query = useQueryClient();
 
@@ -40,24 +46,32 @@ export default function PostCard({ posts }) {
     },
   });
 
-  console.log(likeData?.data?.data.liked);
+  // console.log(likeData?.data?.data.liked);
 
   return (
     <>
       <div className="bg-gray-100 p-4 rounded shadow w-1/2 mx-auto my-3">
-        <Link to={`postdetails/${posts.id}`}>
-          <header className="flex items-center space-x-3 mb-3">
-            <img
-              src={posts.user.photo}
-              className="w-10 h-10 rounded-full"
-              alt="User Image"
-            />
-            <div>
-              <p className="font-semibold">{posts.user.name}</p>
-              <p className="text-xs text-gray-500">{posts.createdAt}</p>
+        <header className="flex justify-between items-center space-x-3 mb-3">
+          <Link to={`postdetails/${posts.id}`}>
+            <div className="flex gap-3">
+              <img
+                src={posts.user.photo}
+                className="w-10 h-10 rounded-full"
+                alt="User Image"
+              />
+              <div>
+                <p className="font-semibold">{posts.user.name}</p>
+                <p className="text-xs text-gray-500">{posts.createdAt}</p>
+              </div>
             </div>
-          </header>
-        </Link>
+          </Link>
+          {/* Start DropDown */}
+          <div>
+            {posts.user._id === userData._id && <DropDown id={posts._id} />}
+          </div>
+          {/* End DropDown */}
+        </header>
+
         {posts.body && <p className="mb-3">{posts.body}</p>}
         {posts.image && (
           <img
