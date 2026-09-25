@@ -189,17 +189,22 @@ export default function DropDown({ id, posts }) {
               }
             }}
           >
-            <Dropdown.Item id="edit-post" textValue="Edit post">
-              <Button variant="secondary">Update Post</Button>
+            <Dropdown.Item
+              id="edit-post"
+              textValue="Edit post"
+              variant="secondary"
+              className="font-medium"
+            >
+              Update Post
             </Dropdown.Item>
             <Dropdown.Item
               id="delete-post"
               textValue="Delete post"
               variant="danger"
+              className="text-red-600 font-medium"
             >
-              <button className="text-red-600" onClick={delFn}>
-                Delete Post
-              </button>
+              {/* <button className="text-red-600" onClick={delFn}> */}
+              Delete Post
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown.Popover>

@@ -106,7 +106,7 @@ function App() {
 
   if (!online) {
     return (
-      <div className="h-screen bg-red-500 text-2xl text-center">
+      <div className="h-screen bg-red-600 text-3xl text-center flex justify-center items-center font-medium">
         <h2>Network Error</h2>
       </div>
     );

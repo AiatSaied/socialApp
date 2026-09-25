@@ -33,6 +33,7 @@ export default function CommentDropDown({ comment }) {
     onSuccess: () => {
       query.invalidateQueries({ queryKey: ["getPosts"] });
       query.invalidateQueries({ queryKey: ["getComments", comment.post] });
+      query.invalidateQueries({ queryKey: ["userPosts"] });
 
       toast.success("Comment Deleted Successfully");
     },
@@ -100,6 +101,7 @@ export default function CommentDropDown({ comment }) {
     onSuccess: () => {
       query.invalidateQueries({ queryKey: ["getPosts"] });
       query.invalidateQueries({ queryKey: ["getComments", comment.post] });
+      query.invalidateQueries({ queryKey: ["userPosts"] });
 
       setmodalState(false);
 

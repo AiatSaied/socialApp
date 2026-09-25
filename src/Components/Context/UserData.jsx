@@ -13,7 +13,7 @@ export function UserDataProvider(props) {
       setToken(localStorage.getItem("userToken"));
     }
   }, []);
-
+  // console.log(localStorage.getItem("userToken"));
   function getUserData() {
     return axios.get(`https://route-posts.routemisr.com/users/profile-data`, {
       headers: {
@@ -25,6 +25,7 @@ export function UserDataProvider(props) {
   let { data, error, isError, isLoading } = useQuery({
     queryKey: ["userData"],
     queryFn: getUserData,
+    enabled: !!Token,
     select: (res) => res?.data?.data.user,
   });
 
