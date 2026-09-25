@@ -7,21 +7,25 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { UserData } from "../../Context/UserData";
+import { Helmet } from "react-helmet";
 
 export default function Login() {
   let { Token, setToken } = useContext(UserData);
 
   let navigate = useNavigate();
 
-  let [errMsg, seterrMsg] = useState(false);
+  let [errMsg, seterrMsg] = useState("");
   const [loading, setloading] = useState(null);
+  // let schema = z.object({
+  //   email: z.email(),
+  //   password: z
+  //     .string()
+  //     .regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/),
+  // });
   let schema = z.object({
-    email: z.email(),
-    password: z
-      .string()
-      .regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/),
+    email: z.email("Please enter a valid email address"),
+    password: z.string().min(1, "Password is required"),
   });
-
   // formState ===> errors
   let { register, handleSubmit, formState } = useForm({
     defaultValues: {
@@ -39,9 +43,9 @@ export default function Login() {
     axios
       .post(`https://route-posts.routemisr.com/users/signin`, values)
       .then((res) => {
-        console.log(res.data.message);
+        // console.log(res.data.message);
         if (res.data.message == "signed in successfully") {
-          console.log(res);
+          // console.log(res);
           localStorage.setItem("userToken", res.data.data.token);
           setToken(res.data.data.token);
           // Stop Loading
@@ -54,59 +58,89 @@ export default function Login() {
         // Stop Loading
         setloading(false);
 
-        console.log(error.response.data.message);
-        seterrMsg(error.response.data.message);
+        // console.log(error.response.data.message);
+        seterrMsg(error.response?.data?.message);
       });
   }
+
   return (
-    <div className="bg-gray-400 p-5 w-[75%] mx-auto my-5 rounded-2xl text-left">
-      <h2>Login Now!</h2>
-      {errMsg !== null ? (
-        <h5 className="bg-red-500 rounded-2xl text-center">{errMsg}</h5>
-      ) : (
-        ""
-      )}
-      <form onSubmit={handleSubmit(submitForm)}>
-        {/* Email Input */}
-        <div>
-          <Input
-            {...register("email")}
-            name="email"
-            aria-label="email"
-            className="w-[95%] my-3"
-            placeholder="Enter your Email"
-          />
-          {formState.errors.email ? (
-            <p className="text-red-600">{formState.errors.email.message}</p>
-          ) : (
-            ""
-          )}
+    <div className="min-h-screen bg-gray-400 flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-4xl bg-gray-300 p-6 sm:p-8 rounded-2xl shadow-lg">
+        <Helmet>
+          <title>Login</title>
+        </Helmet>
+
+        {/* <h2>Login Now!</h2> */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Welcome Back</h1>
+
+          <p className="text-gray-500 mt-2">
+            Login to continue to your account.
+          </p>
         </div>
 
-        {/* Password Input */}
-        <div>
-          <Input
-            {...register("password")}
-            name="password"
-            aria-label="password"
-            className="w-[95%] my-3"
-            placeholder="Enter your Password"
-          />
-          {formState.errors.password ? (
-            <p className="text-red-600">{formState.errors.password.message}</p>
-          ) : (
-            ""
-          )}
-        </div>
+        {errMsg && (
+          <p className="bg-red-100 text-red-600 rounded-lg p-3 text-sm mb-4">
+            {errMsg}
+          </p>
+        )}
+        <form onSubmit={handleSubmit(submitForm)}>
+          {/* Email Input */}
+          <div>
+            <Input
+              {...register("email")}
+              type="email"
+              aria-label="Email"
+              className="w-full my-3"
+              placeholder="Enter your Email"
+            />
+            {formState.errors.email ? (
+              <p className="text-red-600 mt-1">
+                {formState.errors.email.message}
+              </p>
+            ) : (
+              ""
+            )}
+          </div>
 
-        <Button type="submit" className="w-[95%]">
-          {loading === true ? (
-            <i className="fa fa-spin fa-spinner"></i>
-          ) : (
-            "Login"
-          )}
-        </Button>
-      </form>
+          {/* Password Input */}
+          <div>
+            <Input
+              {...register("password")}
+              type="password"
+              aria-label="Password"
+              className="w-full my-3"
+              placeholder="Enter your Password"
+            />
+            {formState.errors.password ? (
+              <p className="text-red-600">
+                {formState.errors.password.message}
+              </p>
+            ) : (
+              ""
+            )}
+          </div>
+
+          <Button type="submit" className="w-full mt-3 text-lg">
+            {loading === true ? (
+              <i className="fa fa-spin fa-spinner"></i>
+            ) : (
+              "Login"
+            )}
+          </Button>
+
+          <p className="text-center text-lg text-gray-500 mt-5">
+            Don't have an account?{" "}
+            <button
+              type="button"
+              onClick={() => navigate("/register")}
+              className="text-blue-600 font-medium hover:underline"
+            >
+              Register
+            </button>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

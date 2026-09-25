@@ -7,8 +7,12 @@ import {
 import Layouts from "./Components/Layouts/Layouts";
 import Home from "./Components/Home/Home";
 import Profile from "./Components/Profile/Profile";
+
+import ChangePassword from "./Components/Auth/ChangePassword/ChangePassword";
+
 import Login from "./Components/Auth/Login/Login";
 import Register from "./Components/Auth/Register/Register";
+
 import NotFound from "./Components/NotFound/NotFound";
 
 import { CounterContextProvider } from "./Components/Context/counterContext";
@@ -21,10 +25,13 @@ import PostDetails from "./Components/PostDetails/PostDetails";
 import AuthProtect from "./Components/AuthProtect/AuthProtect";
 
 import { ToastContainer } from "react-toastify";
+import { useNetworkState } from "react-use";
 
 let queryClient = new QueryClient();
 
 function App() {
+  let { online } = useNetworkState();
+
   let routing = createBrowserRouter([
     {
       path: "",
@@ -47,10 +54,26 @@ function App() {
           ),
         },
         {
+          path: "profile/postdetails/:id",
+          element: (
+            <ProtectedRoute>
+              <PostDetails />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: "profile",
           element: (
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "change-password",
+          element: (
+            <ProtectedRoute>
+              <ChangePassword />
             </ProtectedRoute>
           ),
         },
@@ -81,24 +104,25 @@ function App() {
     },
   ]);
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ReactQueryDevtools />
-      <UserDataProvider>
-        <ToastContainer />
-        <RouterProvider router={routing}></RouterProvider>
-        {/* All Components */}
-      </UserDataProvider>
-    </QueryClientProvider>
+  if (!online) {
+    return (
+      <div className="h-screen bg-red-500 text-2xl text-center">
+        <h2>Network Error</h2>
+      </div>
+    );
+  }
 
-    // <UserDataProvider>
-    //   <CounterContextProvider>
-    //     <div className="text-center">
-    //       <RouterProvider router={routing}></RouterProvider>
-    //       {/* All Components */}
-    //     </div>
-    //   </CounterContextProvider>
-    // </UserDataProvider>
+  return (
+    <>
+      <QueryClientProvider client={queryClient}>
+        <ReactQueryDevtools />
+        <UserDataProvider>
+          <ToastContainer />
+          <RouterProvider router={routing}></RouterProvider>
+          {/* All Components */}
+        </UserDataProvider>
+      </QueryClientProvider>
+    </>
   );
 }
 

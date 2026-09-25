@@ -20,10 +20,12 @@
     "axios": "^1.19.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-helmet": "^6.1.0",
     "react-hook-form": "^7.85.0",
     "react-router-dom": "^7.18.2",
     "react-spinners": "^0.17.0",
     "react-toastify": "^11.1.0",
+    "react-use": "^17.6.1",
     "tailwindcss": "^4.3.3",
     "zod": "^4.4.3"
   },

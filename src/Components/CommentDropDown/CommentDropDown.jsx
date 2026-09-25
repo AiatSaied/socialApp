@@ -1,13 +1,11 @@
 import React, { useRef, useState } from "react";
-import { Button, Dropdown, Label } from "@heroui/react";
+import { Button, Dropdown, Modal } from "@heroui/react";
+
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { Modal } from "@heroui/react";
-import { PulseLoader } from "react-spinners";
 
-export default function DropDown({ id, posts }) {
-  // { id, posts}
+export default function CommentDropDown({ comment }) {
   const [modalState, setmodalState] = useState(false);
 
   let query = useQueryClient();
@@ -16,32 +14,38 @@ export default function DropDown({ id, posts }) {
   let image = useRef();
 
   const [imageSrc, setimageSrc] = useState(null);
-  // Delete Post
-  function deletePost() {
-    return axios.delete(`https://route-posts.routemisr.com/posts/${id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+
+  // Delete Comment
+  function deleteComment() {
+    return axios.delete(
+      `https://route-posts.routemisr.com/posts/${comment.post}/comments/${comment._id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+        },
       },
-    });
+    );
   }
 
-  let {
-    // data: delData,
-    error: delErr,
-    isError: delIsErr,
-    isPending: delIsPending,
-    mutate: delFn,
-  } = useMutation({
-    mutationFn: deletePost,
+  let { isPending: deleteIsPending, mutate: deleteFn } = useMutation({
+    mutationFn: deleteComment,
+
     onSuccess: () => {
       query.invalidateQueries({ queryKey: ["getPosts"] });
-      query.invalidateQueries({ queryKey: ["userPosts"] });
+      query.invalidateQueries({ queryKey: ["getComments", comment.post] });
 
-      toast.success("Post Deleted Successfully");
+      toast.success("Comment Deleted Successfully");
     },
-    onError: () => {
-      toast.error("Cannot Delete Post");
+    onError: (error) => {
+      console.log("Delete Comment Error:", error);
+      console.log("Response:", error.response);
+      console.log("Response Data:", error.response?.data);
+
+      toast.error(error.response?.data?.message || "Cannot Delete Comment");
     },
+    // onError: () => {
+    //   toast.error("Cannot Delete Comment");
+    // },
   });
 
   function previewImage(e) {
@@ -60,14 +64,14 @@ export default function DropDown({ id, posts }) {
     }
   }
 
-  function handlePostData() {
+  function handleCommentData() {
     let formdata = new FormData();
 
-    const postBody = body.current?.value.trim();
+    const commentBody = body.current?.value.trim();
     const selectedImage = image.current?.files?.[0];
 
-    if (postBody) {
-      formdata.append("body", postBody);
+    if (commentBody) {
+      formdata.append("content", commentBody);
     }
 
     if (selectedImage) {
@@ -77,10 +81,11 @@ export default function DropDown({ id, posts }) {
     return formdata;
   }
 
-  function updatePost() {
+  // Update Comment
+  function updateComment() {
     return axios.put(
-      `https://route-posts.routemisr.com/posts/${id}`,
-      handlePostData(),
+      `https://route-posts.routemisr.com/posts/${comment.post}/comments/${comment._id}`,
+      handleCommentData(),
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
@@ -89,140 +94,103 @@ export default function DropDown({ id, posts }) {
     );
   }
 
-  let {
-    // data: updateData,
-    isPending: updateIsPending,
-    error: updateErr,
-    isError: updateIsErr,
-    mutate: updateFn,
-  } = useMutation({
-    mutationFn: updatePost,
+  let { isPending: updateIsPending, mutate: updateFn } = useMutation({
+    mutationFn: updateComment,
 
     onSuccess: () => {
       query.invalidateQueries({ queryKey: ["getPosts"] });
-      query.invalidateQueries({ queryKey: ["userPosts"] });
+      query.invalidateQueries({ queryKey: ["getComments", comment.post] });
 
       setmodalState(false);
 
       if (body.current) {
         body.current.value = "";
       }
+
       if (image.current) {
         image.current.value = "";
       }
+
       setimageSrc(null);
 
-      toast.success("Post Updated Successfully");
+      toast.success("Comment Updated Successfully");
     },
+
     onError: () => {
-      toast.error("Cannot Update Post");
+      toast.error("Cannot Update Comment");
     },
   });
 
-  function handleUpdatePost() {
-    const postBody = body.current?.value.trim();
+  function handleUpdateComment() {
+    const commentBody = body.current?.value.trim();
     const selectedImage = image.current?.files?.[0];
 
-    if (!postBody && !selectedImage) {
-      toast.error("Please write something or choose an image.");
+    if (!commentBody && !selectedImage) {
+      toast.error("Please write a comment or choose an image.");
       return;
     }
 
     updateFn();
   }
 
-  if (delIsPending) {
-    return (
-      <div className="h-screen flex justify-center items-center">
-        <PulseLoader color="lightseagreen" />
-      </div>
-    );
-  }
-
-  if (delIsErr) {
-    return (
-      <div className="h-screen flex justify-center items-center text-red-600 font-semibold">
-        <h2>{delErr.message}</h2>
-      </div>
-    );
-  }
-
-  if (updateIsErr) {
-    return (
-      <div className="h-screen flex justify-center items-center text-red-600 font-semibold">
-        <h2>{updateErr.message}</h2>
-      </div>
-    );
-  }
   return (
     <>
       <Dropdown>
-        <Button aria-label="Menu" variant="secondary" isDisabled={delIsPending}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="size-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
-            />
-          </svg>
+        <Button
+          aria-label="Comment Menu"
+          variant="secondary"
+          isDisabled={deleteIsPending}
+          className="min-w-0 p-1 bg-transparent"
+        >
+          <i className="fa-solid fa-ellipsis text-gray-400"></i>
         </Button>
+
         <Dropdown.Popover>
           <Dropdown.Menu
             onAction={(key) => {
-              console.log(`Selected: ${key}`);
-              // if (key == "edit-file") {
-              //   setmodalState(true);
-              // }
-              if (key === "edit-post") {
+              if (key === "edit-comment") {
                 setmodalState(true);
               }
 
-              if (key === "delete-post") {
-                delFn();
+              if (key === "delete-comment") {
+                deleteFn();
               }
             }}
           >
-            <Dropdown.Item id="edit-post" textValue="Edit post">
-              <Button variant="secondary">Update Post</Button>
+            <Dropdown.Item id="edit-comment" textValue="Edit comment">
+              Update Comment
             </Dropdown.Item>
+
             <Dropdown.Item
-              id="delete-post"
-              textValue="Delete post"
+              id="delete-comment"
+              textValue="Delete comment"
               variant="danger"
             >
-              <button className="text-red-600" onClick={delFn}>
-                Delete Post
-              </button>
+              Delete Comment
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown>
 
-      {/* Start Modal */}
+      {/* Update Comment Modal */}
       <Modal isOpen={modalState} onOpenChange={setmodalState}>
         <Modal.Backdrop>
           <Modal.Container>
             <Modal.Dialog className="sm:max-w-[500px]">
               <Modal.CloseTrigger />
+
               <Modal.Header>
-                <Modal.Heading>Update Post</Modal.Heading>
+                <Modal.Heading>Update Comment</Modal.Heading>
               </Modal.Header>
 
               <Modal.Body>
                 <div className="flex gap-3 items-end">
                   <textarea
                     ref={body}
-                    defaultValue={posts?.body || ""}
+                    defaultValue={comment?.content || ""}
                     className="w-full border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 p-4 rounded-xl outline-none resize-none transition"
                     rows="4"
-                    placeholder="What's on your mind?"
+                    placeholder="Write your comment..."
                   />
 
                   <label
@@ -230,7 +198,7 @@ export default function DropDown({ id, posts }) {
                     className="cursor-pointer flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 text-gray-600 transition"
                     title="Add image"
                   >
-                    <i className="fa-regular fa-image text-2xl"></i>
+                    <i className="fa-regular fa-image text-xl"></i>
                   </label>
 
                   <input
@@ -261,17 +229,17 @@ export default function DropDown({ id, posts }) {
                   </div>
                 )}
               </Modal.Body>
+
               <Modal.Footer>
                 <Button
-                  onClick={handleUpdatePost}
+                  onClick={handleUpdateComment}
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold"
-                  slot="close"
                   disabled={updateIsPending}
                 >
                   {updateIsPending ? (
                     <i className="fa fa-spin fa-spinner"></i>
                   ) : (
-                    "Update Post"
+                    "Update Comment"
                   )}
                 </Button>
               </Modal.Footer>
@@ -279,7 +247,6 @@ export default function DropDown({ id, posts }) {
           </Modal.Container>
         </Modal.Backdrop>
       </Modal>
-      {/* End Modal */}
     </>
   );
 }

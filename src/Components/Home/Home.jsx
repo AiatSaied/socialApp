@@ -6,6 +6,8 @@ import { PulseLoader } from "react-spinners";
 import { useQuery } from "@tanstack/react-query";
 import CreatePost from "../CreatePost/CreatePost";
 
+import { Helmet } from "react-helmet";
+
 export default function Home() {
   // const [allposts, setallposts] = useState(null);
   // const [isLoading, setisLoading] = useState(true);
@@ -105,12 +107,21 @@ export default function Home() {
 
   return (
     <>
-      {/* Create post box */}
-      <CreatePost />
+      <Helmet>
+        <title>Home</title>
+      </Helmet>
 
-      {data?.map((post) => {
-        return <PostCard posts={post} key={post.id} />;
-      })}
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        {/* Create post box */}
+        <CreatePost />
+
+        {/* Posts */}
+        <div className="space-y-5 mt-6">
+          {data?.map((post) => {
+            return <PostCard posts={post} key={post.id} />;
+          })}
+        </div>
+      </div>
     </>
   );
 }

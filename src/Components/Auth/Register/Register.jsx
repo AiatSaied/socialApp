@@ -6,34 +6,52 @@ import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet";
 
 export default function Register() {
   let navigate = useNavigate();
 
-  let [errMsg, seterrMsg] = useState(false);
+  // let [errMsg, seterrMsg] = useState(false);
+  let [errMsg, seterrMsg] = useState("");
   const [loading, setloading] = useState(null);
   let schema = z
     .object({
       name: z
         .string()
-        .min(2, "!at Least 2 characters")
-        .max(8, "!max characters is 8"),
-      username: z.string().regex(/^[a-zA-Z0-9_]{3,30}$/, "ex. Ahmed123"),
+        .trim()
+        .min(2, "Name must be at least 2 characters")
+        .max(30, "Name must not exceed 30 characters"),
+      // username: z.string().regex(/^[a-zA-Z0-9_]{3,30}$/, "ex. Ahmed123"),
+      username: z
+        .string()
+        .trim()
+        .min(3, "Username must be at least 3 characters")
+        .max(30, "Username must not exceed 30 characters")
+        .regex(
+          /^[a-zA-Z0-9_]+$/,
+          "Username can only contain letters, numbers, and underscores",
+        ),
       email: z.email(),
       dateOfBirth: z
         .string()
-        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .min(1, "Date of birth is required")
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Please enter a valid date")
         .refine((date) => {
-          let userDate = new Date(date);
-          let todayDate = new Date();
+          const userDate = new Date(date);
+          const todayDate = new Date();
+
           todayDate.setHours(0, 0, 0, 0);
+
           return userDate < todayDate;
-        }, "Invalid Date"),
-      gender: z.enum(["male", "female", "Gender Required"]),
+        }, "Date of birth must be in the past"),
+      gender: z.enum(["male", "female"], {
+        error: "Please select your gender",
+      }),
       password: z
         .string()
         .regex(
-          /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/,
+          /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[#?!@$%^&*-]).{8,}$/,
+          "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character",
         ),
       rePassword: z.string(),
     })
@@ -55,7 +73,7 @@ export default function Register() {
       password: "",
       rePassword: "",
       dateOfBirth: "",
-      gender: "",
+      gender: undefined,
     },
     resolver: zodResolver(schema),
   });
@@ -70,7 +88,7 @@ export default function Register() {
     axios
       .post(`https://route-posts.routemisr.com/users/signup`, values)
       .then((res) => {
-        console.log(res.data.message);
+        // console.log(res.data.message);
         if (res.data.message == "account created") {
           // Stop Loading
           setloading(false);
@@ -82,153 +100,190 @@ export default function Register() {
         // Stop Loading
         setloading(false);
 
-        console.log(error.response.data.message);
-        seterrMsg(error.response.data.message);
+        // console.log(error.response.data.message);
+        seterrMsg(error.response?.data?.message);
       });
   }
   return (
-    <div className="bg-gray-400 p-5 w-[75%] mx-auto my-5 rounded-2xl text-left">
-      <h2>Register Now!</h2>
-      {errMsg !== null ? (
-        <h5 className="bg-red-500 rounded-2xl text-center">{errMsg}</h5>
-      ) : (
-        ""
-      )}
-      <form onSubmit={handleSubmit(submitForm)}>
-        {/* Name Input */}
-        <div>
-          <Input
-            {...register("name")}
-            name="name"
-            aria-label="Name"
-            className="w-[95%] my-3"
-            placeholder="Enter your name"
-          />
-          {formState.errors.name ? (
-            <p className="text-red-600">{formState.errors.name.message}</p>
-          ) : (
-            ""
-          )}
+    <div className="min-h-screen bg-gray-400 flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-4xl bg-gray-300 p-6 sm:p-8 rounded-2xl shadow-lg">
+        <Helmet>
+          <title>Register</title>
+        </Helmet>
+
+        {/* <h2 className="font-semibold text-xl">Register Now!</h2> */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">
+            Create your account
+          </h1>
+
+          <p className="text-gray-500 mt-2">
+            Join the community and start connecting with others.
+          </p>
         </div>
-        {/* UserName Input */}
-        <div>
-          <Input
-            {...register("username")}
-            name="username"
-            aria-label="username"
-            className="w-[95%] my-3"
-            placeholder="Enter your UserName"
-          />
-          {formState.errors.username ? (
-            <p className="text-red-600">{formState.errors.username.message}</p>
-          ) : (
-            ""
-          )}
-        </div>
-        {/* Email Input */}
-        <div>
-          <Input
-            {...register("email")}
-            name="email"
-            aria-label="email"
-            className="w-[95%] my-3"
-            placeholder="Enter your Email"
-          />
-          {formState.errors.email ? (
-            <p className="text-red-600">{formState.errors.email.message}</p>
-          ) : (
-            ""
-          )}
-        </div>
-        {/* Date of Birth Input */}
-        <div>
-          <Input
-            {...register("dateOfBirth")}
-            type="date"
-            name="dateOfBirth"
-            aria-label="dateOfBirth"
-            className="w-[95%] my-3"
-          />
-          {formState.errors.dateOfBirth ? (
-            <p className="text-red-600">
-              {formState.errors.dateOfBirth.message}
-            </p>
-          ) : (
-            ""
-          )}
-        </div>
-        {/* Password Input */}
-        <div>
-          <Input
-            {...register("password")}
-            name="password"
-            aria-label="password"
-            className="w-[95%] my-3"
-            placeholder="Enter your Password"
-          />
-          {formState.errors.password ? (
-            <p className="text-red-600">{formState.errors.password.message}</p>
-          ) : (
-            ""
-          )}
-        </div>
-        {/* rePassword Input */}
-        <div>
-          <Input
-            {...register("rePassword")}
-            name="rePassword"
-            aria-label="rePassword"
-            className="w-[95%] my-3"
-            placeholder="Enter your rePassword"
-          />
-          {formState.errors.rePassword ? (
-            <p className="text-red-600">
-              {formState.errors.rePassword.message}
-            </p>
-          ) : (
-            ""
-          )}
-        </div>
-        {/* Gender Input */}
-        <div>
-          <input
-            {...register("gender")}
-            id="male"
-            type="radio"
-            value="male"
-            name="gender"
-            aria-label="gender"
-            className="my-2 mx-2"
-          />
-          <label htmlFor="male">Male</label>
-        </div>
-        {/* Gender Input */}
-        <div>
-          <input
-            {...register("gender")}
-            id="female"
-            type="radio"
-            value="female"
-            name="gender"
-            aria-label="gender"
-            className="my-2 mx-2"
-          />
-          <label htmlFor="female">Female</label>
-        </div>
-        {formState.errors.gender ? (
-          <p className="text-red-600">{formState.errors.gender.message}</p>
-        ) : (
-          ""
+        {errMsg && (
+          <p className="bg-red-100 text-red-600 rounded-lg p-3 text-sm mb-4">
+            {errMsg}
+          </p>
         )}
 
-        <Button type="submit" className="w-[95%]">
-          {loading === true ? (
-            <i className="fa fa-spin fa-spinner"></i>
-          ) : (
-            "Register"
-          )}
-        </Button>
-      </form>
+        <form onSubmit={handleSubmit(submitForm)}>
+          {/* Name Input */}
+          <div>
+            <Input
+              {...register("name")}
+              // name="name"
+              aria-label="Name"
+              className="w-full my-3"
+              placeholder="Enter your name"
+            />
+            {formState.errors.name ? (
+              <p className="text-red-600">{formState.errors.name.message}</p>
+            ) : (
+              ""
+            )}
+          </div>
+          {/* UserName Input */}
+          <div>
+            <Input
+              {...register("username")}
+              name="username"
+              aria-label="username"
+              className="w-full my-3"
+              placeholder="Enter your UserName"
+            />
+            {formState.errors.username ? (
+              <p className="text-red-600">
+                {formState.errors.username.message}
+              </p>
+            ) : (
+              ""
+            )}
+          </div>
+          {/* Email Input */}
+          <div>
+            <Input
+              {...register("email")}
+              type="email"
+              aria-label="Email"
+              className="w-full my-3"
+              placeholder="Enter your Email"
+            />
+            {formState.errors.email ? (
+              <p className="text-red-600">{formState.errors.email.message}</p>
+            ) : (
+              ""
+            )}
+          </div>
+          {/* Date of Birth Input */}
+          <div>
+            <Input
+              {...register("dateOfBirth")}
+              type="date"
+              name="dateOfBirth"
+              aria-label="dateOfBirth"
+              className="w-full my-3"
+            />
+            {formState.errors.dateOfBirth ? (
+              <p className="text-red-600">
+                {formState.errors.dateOfBirth.message}
+              </p>
+            ) : (
+              ""
+            )}
+          </div>
+          {/* Password Input */}
+          <div>
+            <Input
+              {...register("password")}
+              type="password"
+              aria-label="Password"
+              className="w-full my-3"
+              placeholder="Enter your Password"
+            />
+
+            {formState.errors.password ? (
+              <p className="text-red-600">
+                {formState.errors.password.message}
+              </p>
+            ) : (
+              ""
+            )}
+          </div>
+          {/* rePassword Input */}
+          <div>
+            <Input
+              {...register("rePassword")}
+              type="password"
+              aria-label="Confirm Password"
+              className="w-full my-3"
+              placeholder="Confirm your Password"
+            />
+            {formState.errors.rePassword ? (
+              <p className="text-red-600">
+                {formState.errors.rePassword.message}
+              </p>
+            ) : (
+              ""
+            )}
+          </div>
+          {/* Gender Input */}
+          <div className="mb-4">
+            <p className="text-lg font-medium text-gray-800 mb-1">Gender</p>
+
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  {...register("gender")}
+                  id="male"
+                  type="radio"
+                  value="male"
+                  name="gender"
+                  aria-label="gender"
+                />
+                <label htmlFor="male">Male</label>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  {...register("gender")}
+                  id="female"
+                  type="radio"
+                  value="female"
+                  name="gender"
+                  aria-label="gender"
+                />
+                <label htmlFor="female">Female</label>
+              </label>
+            </div>
+            {formState.errors.gender ? (
+              <p className="text-red-600 text-sm mt-1">
+                {formState.errors.gender.message}
+              </p>
+            ) : (
+              ""
+            )}
+          </div>
+
+          <Button type="submit" className="w-full mt-3 text-lg">
+            {loading === true ? (
+              <i className="fa fa-spin fa-spinner"></i>
+            ) : (
+              "Register"
+            )}
+          </Button>
+          <p className="text-center text-lg text-gray-500 mt-5">
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="text-blue-600 font-medium hover:underline"
+            >
+              Login
+            </button>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { UserData } from "../Context/UserData";
+// import { PulseLoader } from "react-spinners";
 
 export default function CreatePost() {
   let { data: userData } = useContext(UserData);
@@ -16,23 +17,35 @@ export default function CreatePost() {
   const [imageSrc, setimageSrc] = useState(null);
 
   function previewImage(e) {
-    // console.log(e.target.files[0]);
-    setimageSrc(URL.createObjectURL(e.target.files[0]));
+    const file = e.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setimageSrc(URL.createObjectURL(file));
   }
 
   function closeImage() {
     setimageSrc(null);
+
+    if (image.current) {
+      image.current.value = "";
+    }
   }
 
   function handlePostData() {
     let formdata = new FormData();
 
-    if (body.current.value) {
-      formdata.append("body", body.current.value);
+    const postBody = body.current?.value.trim();
+    const selectedImage = image.current?.files?.[0];
+
+    if (postBody) {
+      formdata.append("body", postBody);
     }
 
-    if (image.current.files[0]) {
-      formdata.append("image", image.current.files[0]);
+    if (selectedImage) {
+      formdata.append("image", selectedImage);
     }
 
     return formdata;
@@ -50,35 +63,76 @@ export default function CreatePost() {
     );
   }
 
-  let { data, error, isError, isPending, mutate } = useMutation({
+  let { error, isError, isPending, mutate } = useMutation({
     mutationFn: createPost,
+
     onSuccess: () => {
-      // setimageSrc(null);
       query.invalidateQueries({ queryKey: ["getPosts"] });
+      query.invalidateQueries({ queryKey: ["userPosts"] });
+
+      if (body.current) {
+        body.current.value = "";
+      }
+
+      if (image.current) {
+        image.current.value = "";
+      }
+
+      setimageSrc(null);
+
       toast.success("Post Created Successfully");
     },
+
     onError: () => {
       toast.error("Cannot Create Post");
     },
   });
 
+  function handleCreatePost() {
+    const postBody = body.current?.value.trim();
+    const selectedImage = image.current?.files?.[0];
+
+    if (!postBody && !selectedImage) {
+      toast.error("Please write something or choose an image.");
+      return;
+    }
+
+    mutate();
+  }
+
+  // if (isPending) {
+  //   return (
+  //     <div className="h-screen flex justify-center items-center">
+  //       <PulseLoader color="lightseagreen" />
+  //     </div>
+  //   );
+  // }
+
+  if (isError) {
+    return (
+      <div className="h-screen flex justify-center items-center text-red-600 font-semibold">
+        <h2>{error.message}</h2>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Start Modal */}
       <Modal>
-        <section className="bg-gray-200 p-4 rounded shadow w-1/2 mx-auto my-4 py-6">
-          <div className="flex items-center space-x-3 mb-4">
+        <section className="w-full bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-200 mx-auto mb-6">
+          <div className="flex items-center gap-3">
             <img
               src={userData?.photo}
-              alt="User"
-              className="h-10 w-10 rounded-full"
+              alt={`${userData?.name || "User"} profile`}
+              className="h-11 w-11 rounded-full object-cover border border-gray-200"
             />
-            <Button variant="secondary" className="w-full bg-white">
-              <input
-                type="text"
-                placeholder="What's on your mind?"
-                className=""
-              />
+
+            <Button
+              variant="secondary"
+              className="flex-1 justify-start bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-full px-5"
+            >
+              What's on your mind?
             </Button>
           </div>
           <Modal.Backdrop>
@@ -88,31 +142,24 @@ export default function CreatePost() {
                 <Modal.Header>
                   <Modal.Heading>Add Post</Modal.Heading>
                 </Modal.Header>
+
                 <Modal.Body>
                   <div className="flex gap-3 items-end">
                     <textarea
                       ref={body}
-                      className="w-full border p-4 rounded-xs"
+                      className="w-full border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 p-4 rounded-xl outline-none resize-none transition"
                       rows="4"
-                      placeholder="Enter Your Post"
-                      id=""
-                    ></textarea>
-                    <label htmlFor="upload">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="size-6"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
-                        />
-                      </svg>
+                      placeholder="What's on your mind?"
+                    />
+
+                    <label
+                      htmlFor="upload"
+                      className="cursor-pointer flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 text-gray-600 transition"
+                      title="Add image"
+                    >
+                      <i className="fa-regular fa-image text-2xl"></i>
                     </label>
+
                     <input
                       ref={image}
                       onChange={previewImage}
@@ -121,33 +168,38 @@ export default function CreatePost() {
                       hidden
                     />
                   </div>
-                  <div className="relative">
-                    <svg
-                      onClick={closeImage}
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="size-6 absolute top-2 right-2 text-red-600 "
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                      />
-                    </svg>
 
-                    <img
-                      className="w-full mt-4"
-                      src={imageSrc}
-                      alt="Choose Image"
-                    />
-                  </div>
+                  {imageSrc && (
+                    <div className="relative mt-4">
+                      <button
+                        type="button"
+                        onClick={closeImage}
+                        className="absolute top-2 right-2 z-10 bg-black/60 hover:bg-black/75 text-white rounded-full w-8 h-8 flex items-center justify-center transition"
+                        aria-label="Remove selected image"
+                      >
+                        <i className="fa-solid fa-xmark"></i>
+                      </button>
+
+                      <img
+                        className="w-full max-h-80 object-cover rounded-xl"
+                        src={imageSrc}
+                        alt="Selected"
+                      />
+                    </div>
+                  )}
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button onClick={mutate} className="w-full" slot="close">
-                    Create Post
+                  <Button
+                    onClick={handleCreatePost}
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+                    slot="close"
+                    disabled={isPending}
+                  >
+                    {isPending ? (
+                      <i className="fa fa-spin fa-spinner"></i>
+                    ) : (
+                      "Create Post"
+                    )}
                   </Button>
                 </Modal.Footer>
               </Modal.Dialog>
