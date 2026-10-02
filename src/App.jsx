@@ -15,7 +15,7 @@ import Register from "./Components/Auth/Register/Register";
 
 import NotFound from "./Components/NotFound/NotFound";
 
-import { CounterContextProvider } from "./Components/Context/counterContext";
+// import { CounterContextProvider } from "./Components/Context/counterContext";
 import { UserDataProvider } from "./Components/Context/UserData";
 
 import ProtectedRoute from "./Components/ProtectedRoute/ProtectedRoute";
