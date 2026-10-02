@@ -15,7 +15,6 @@ import Register from "./Components/Auth/Register/Register";
 
 import NotFound from "./Components/NotFound/NotFound";
 
-// import { CounterContextProvider } from "./Components/Context/counterContext";
 import { UserDataProvider } from "./Components/Context/UserData";
 
 import ProtectedRoute from "./Components/ProtectedRoute/ProtectedRoute";
@@ -26,6 +25,7 @@ import AuthProtect from "./Components/AuthProtect/AuthProtect";
 
 import { ToastContainer } from "react-toastify";
 import { useNetworkState } from "react-use";
+// import { CounterContextProvider } from "./Components/Context/CounterContext";
 
 let queryClient = new QueryClient();
 
